@@ -17,16 +17,29 @@ const HOST = 'localhost';
 const server = udp.createSocket('udp4');
 
 // Når serveren modtager en besked
-server.on('message', function(msg, info){
+server.on('message', (msg, info) => {
+    const nr = msg.toString().split(' ')[1];
+    
     // 'Received %d bytes from %s:%d', msg.length, info.address, info.port
 
-    console.log(boxen(
-        'Data received from client: ' + msg.toString()
-    , { padding: 1, borderStyle: 'round', borderColor: 'green' }));
+    // console.log(boxen(
+    //     'Data received from client: ' + msg.toString()
+    // , { padding: 1, borderStyle: 'round', borderColor: 'green' }));
+
+    console.log(`Server received: ${msg}`);
+
+    server.send(`Pong ${nr}`, info.port, HOST, (error) => {
+        if (error) {
+            console.log(error);
+            // client.close();
+        } else {
+
+        }
+    });
 });
 
 // Serverens detaler 
-server.on('listening', function(){
+server.on('listening', () => {
     let address = server.address();
     let port = address.port;
     let family = address.family;
@@ -40,8 +53,8 @@ server.on('listening', function(){
 });
 
 // Hvis serveren slukkes
-server.on('close', function(){
-    console.log('Socket is closed !');
+server.on('close', () => {
+    console.log('Socket is closed!');
 });
 
 // Start serven, bruger "listening" funktionen
@@ -51,13 +64,20 @@ server.bind(PORT);
 
 const client = udp.createSocket('udp4');
 
-// Client sender en besked til serveren
-client.send('hej', PORT, HOST, function(error){
-    if(error){
-        client.close();
-    } else {
-        console.log('Data sent!');
-    }
+// Client sender beskeder til serveren
+for (let i = 1; i < 11; i++) {
+    client.send(`Ping ${i}`, PORT, HOST, (error) => {
+        if(error) {
+            console.log(error);
+            client.close();
+        } else {
+            // console.log(`Data sent, ${i}`);
+        }
+    });
+}
+
+client.on('message', (msg, info) => {
+    console.log(`Client received: ${msg.toString()}`);
 });
 
 // ########################################
